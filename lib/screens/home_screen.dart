@@ -427,12 +427,11 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
           onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-
             if (index == 2) {
               Navigator.pushNamed(context, AppRoutes.createPost);
+            } else if (index == 3) {
+              // Profile tab
+              Navigator.pushNamed(context, AppRoutes.editProfile);
             } else {
               setState(() {
                 _currentIndex = index;

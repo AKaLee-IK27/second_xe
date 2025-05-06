@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:second_xe/screens/create_post_screen.dart';
+import 'package:second_xe/screens/edit_profile_screen.dart';
 import 'package:second_xe/screens/forgot_password_screen.dart';
 import 'package:second_xe/screens/home_screen.dart';
 import 'package:second_xe/screens/login_screen.dart';
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
             AppRoutes.home: (context) => const HomeScreen(),
             AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
             AppRoutes.createPost: (context) => const CreatePostScreen(),
+            AppRoutes.editProfile: (context) => const EditProfileScreen(),
           },
         );
       },
