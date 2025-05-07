@@ -7,7 +7,7 @@ import 'package:second_xe/screens/home_screen.dart';
 import 'package:second_xe/screens/login_screen.dart';
 import 'package:second_xe/screens/sign_up_screen.dart';
 import 'package:second_xe/screens/splash_screen.dart';
-import 'package:second_xe/utils/routes.dart';
+import 'package:second_xe/screens/utils/routes.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

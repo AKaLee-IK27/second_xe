@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:second_xe/core/styles/colors.dart';
 import 'package:second_xe/core/styles/text_styles.dart';
 import 'package:second_xe/screens/post_detail_screen.dart';
-import 'package:second_xe/utils/routes.dart';
-import 'package:second_xe/utils/sizes.dart';
+import 'package:second_xe/screens/utils/routes.dart';
+import 'package:second_xe/screens/utils/sizes.dart';
 import 'package:second_xe/widgets/filter_dialog.dart';
 
 class HomeScreen extends StatefulWidget {

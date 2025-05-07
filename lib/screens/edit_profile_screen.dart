@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:second_xe/core/styles/colors.dart';
 import 'package:second_xe/core/styles/text_styles.dart';
-import 'package:second_xe/utils/sizes.dart';
+import 'package:second_xe/screens/utils/sizes.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});

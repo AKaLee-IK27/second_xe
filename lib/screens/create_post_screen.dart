@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:second_xe/core/styles/colors.dart';
 import 'package:second_xe/core/styles/text_styles.dart';
-import 'package:second_xe/utils/sizes.dart';
+import 'package:second_xe/screens/utils/sizes.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -41,8 +41,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     'Navigation System': false,
     'Leather Seats': false,
   };
-
-  final List<String> _uploadedImages = [];
 
   @override
   void dispose() {
