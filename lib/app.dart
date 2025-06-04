@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:second_xe/providers/auth_provider.dart';
 import 'package:second_xe/providers/vehicle_provider.dart';
+import 'package:second_xe/providers/favourite_provider.dart';
 import 'package:second_xe/screens/create_post_screen.dart';
 import 'package:second_xe/screens/edit_profile_screen.dart';
+import 'package:second_xe/screens/favourites_screen.dart';
 import 'package:second_xe/screens/forgot_password_screen.dart';
 import 'package:second_xe/screens/home_screen.dart';
 import 'package:second_xe/screens/login_screen.dart';
@@ -22,6 +24,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => VehicleProvider()),
+        ChangeNotifierProvider(create: (_) => FavouriteProvider()),
       ],
       child: ResponsiveSizer(
         builder: (context, orientation, screenType) {
@@ -39,6 +42,8 @@ class MyApp extends StatelessWidget {
                   (context) => AuthGuard(child: const CreatePostScreen()),
               AppRoutes.editProfile:
                   (context) => AuthGuard(child: const EditProfileScreen()),
+              AppRoutes.favourites:
+                  (context) => AuthGuard(child: const FavouritesScreen()),
             },
           );
         },

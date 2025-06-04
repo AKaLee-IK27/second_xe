@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:second_xe/core/styles/colors.dart';
 import 'package:second_xe/core/styles/text_styles.dart';
+import 'package:second_xe/providers/vehicle_provider.dart';
+import 'package:second_xe/providers/favourite_provider.dart';
 import 'package:second_xe/screens/post_detail_screen.dart';
 import 'package:second_xe/screens/utils/routes.dart';
 import 'package:second_xe/screens/utils/sizes.dart';
+import 'package:second_xe/widgets/car_card.dart';
 import 'package:second_xe/widgets/filter_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,13 +19,34 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load vehicles when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<VehicleProvider>().loadVehicles();
+      // Initialize favorites for quick checking
+      context.read<FavouriteProvider>().initializeFavourites();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: _buildAppBar(),
-      body: _buildBody(),
+      body: RefreshIndicator(
+        onRefresh: () => context.read<VehicleProvider>().refresh(),
+        child: _buildBody(),
+      ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -76,20 +101,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBody() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSearchBar(),
-            16.h,
-            _buildFeaturedCarsSlider(),
-            24.h,
-            _buildRecommendedSection(),
-          ],
-        ),
-      ),
+    return Consumer<VehicleProvider>(
+      builder: (context, vehicleProvider, child) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 16.0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSearchBar(),
+                16.h,
+                _buildFeaturedCarsSection(vehicleProvider),
+                24.h,
+                _buildAllVehiclesSection(vehicleProvider),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -103,13 +136,21 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: TextField(
+              controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search for Honda Pilot 7-Passenger',
+                hintText: 'Search for cars, brands, models...',
                 hintStyle: TextStyle(color: Colors.grey[400]),
                 prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(vertical: 15),
               ),
+              onSubmitted: (query) {
+                if (query.trim().isNotEmpty) {
+                  context.read<VehicleProvider>().searchVehicles(query.trim());
+                } else {
+                  context.read<VehicleProvider>().loadVehicles();
+                }
+              },
             ),
           ),
           Container(
@@ -136,58 +177,116 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFeaturedCarsSlider() {
-    return SizedBox(
-      height: 180,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          _buildFeaturedCarCard(
-            image: 'assets/images/tesla_model_3.jpg',
-            title: 'Tesla model 3 standard range plus',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PostDetailScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 16),
-          _buildFeaturedCarCard(
-            image: 'assets/images/land_rover.jpg',
-            title: 'Land Rover Discovery Sport',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PostDetailScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+  Widget _buildFeaturedCarsSection(VehicleProvider vehicleProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Featured Cars',
+              style: AppTextStyles.headline2.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                vehicleProvider.loadFeaturedVehicles(limit: 20);
+              },
+              child: Text('See all', style: TextStyle(color: Colors.grey[600])),
+            ),
+          ],
+        ),
+        8.h,
+        SizedBox(
+          height: 200,
+          child:
+              vehicleProvider.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : vehicleProvider.hasError
+                  ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.grey[400],
+                          size: 48,
+                        ),
+                        8.h,
+                        Text(
+                          vehicleProvider.errorMessage ?? 'Error loading cars',
+                          style: TextStyle(color: Colors.grey[600]),
+                          textAlign: TextAlign.center,
+                        ),
+                        8.h,
+                        ElevatedButton(
+                          onPressed: () => vehicleProvider.refresh(),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                  : vehicleProvider.vehicles.isEmpty
+                  ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.directions_car,
+                          color: Colors.grey[400],
+                          size: 48,
+                        ),
+                        8.h,
+                        Text(
+                          'No cars available',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                  : ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount:
+                        vehicleProvider.vehicles.length > 5
+                            ? 5
+                            : vehicleProvider.vehicles.length,
+                    itemBuilder: (context, index) {
+                      final vehicle = vehicleProvider.vehicles[index];
+                      return Container(
+                        width: 300,
+                        margin: const EdgeInsets.only(right: 16),
+                        child: _buildFeaturedCarCard(vehicle),
+                      );
+                    },
+                  ),
+        ),
+      ],
     );
   }
 
-  Widget _buildFeaturedCarCard({
-    required String image,
-    required String title,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildFeaturedCarCard(vehicle) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostDetailScreen(carId: vehicle.id),
+          ),
+        );
+      },
       child: Stack(
         children: [
           Container(
-            width: 300,
+            width: double.infinity,
+            height: 200,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
               image: DecorationImage(
                 image: NetworkImage(
-                  "https://images.unsplash.com/photo-1620891549027-942fdc95d3f5?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                  vehicle.primaryImageUrl ??
+                      "https://images.unsplash.com/photo-1620891549027-942fdc95d3f5?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
                 ),
                 fit: BoxFit.cover,
               ),
@@ -196,19 +295,41 @@ class _HomeScreenState extends State<HomeScreen> {
               alignment: Alignment.bottomLeft,
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Color.fromRGBO(0, 0, 0, 0.6),
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                  ),
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
                   ),
                 ),
-                child: Text(
-                  title,
-                  style: AppTextStyles.bodyText1.copyWith(color: Colors.white),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vehicle.title,
+                      style: AppTextStyles.bodyText1.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    4.h,
+                    Text(
+                      vehicle.formattedPrice,
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -240,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecommendedSection() {
+  Widget _buildAllVehiclesSection(VehicleProvider vehicleProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -248,154 +369,159 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recommended',
+              'All Vehicles',
               style: AppTextStyles.headline2.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextButton(
-              onPressed: () {},
-              child: Text('See all', style: TextStyle(color: Colors.grey[600])),
+            Row(
+              children: [
+                Text(
+                  '${vehicleProvider.vehiclesCount} cars',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                ),
+                PopupMenuButton<VehicleSortOption>(
+                  icon: Icon(Icons.sort, color: Colors.grey[600]),
+                  onSelected: (option) {
+                    vehicleProvider.sortVehicles(option);
+                  },
+                  itemBuilder:
+                      (context) => [
+                        const PopupMenuItem(
+                          value: VehicleSortOption.newest,
+                          child: Text('Newest First'),
+                        ),
+                        const PopupMenuItem(
+                          value: VehicleSortOption.priceAsc,
+                          child: Text('Price: Low to High'),
+                        ),
+                        const PopupMenuItem(
+                          value: VehicleSortOption.priceDesc,
+                          child: Text('Price: High to Low'),
+                        ),
+                        const PopupMenuItem(
+                          value: VehicleSortOption.yearDesc,
+                          child: Text('Year: Newest'),
+                        ),
+                        const PopupMenuItem(
+                          value: VehicleSortOption.mileageAsc,
+                          child: Text('Mileage: Low to High'),
+                        ),
+                      ],
+                ),
+              ],
             ),
           ],
         ),
         16.h,
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          childAspectRatio: 0.75,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: [
-            _buildCarCard(
-              image: 'assets/images/audi.jpg',
-              name: 'Audi e-tron Premium',
-              price: 'Rs. 54,77,823.73',
-              isFavorite: false,
+        if (vehicleProvider.isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(),
             ),
-            _buildCarCard(
-              image: 'assets/images/suzuki.jpg',
-              name: 'Suzuki Swift',
-              price: 'Rs. 5,85,000',
-              isFavorite: false,
-            ),
-            _buildCarCard(
-              image: 'assets/images/bmw.jpg',
-              name: 'BMW X5',
-              price: 'Rs. 82,90,000',
-              isFavorite: false,
-            ),
-            _buildCarCard(
-              image: 'assets/images/mercedes.jpg',
-              name: 'Mercedes-Benz C-Class',
-              price: 'Rs. 67,00,000',
-              isFavorite: true,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCarCard({
-    required String image,
-    required String name,
-    required String price,
-    required bool isFavorite,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PostDetailScreen()),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-                  child: Image.network(
-                    "https://images.unsplash.com/photo-1620891549027-942fdc95d3f5?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          '360 View',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(Icons.rotate_right, size: 12),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorite ? Colors.red : Colors.grey,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+          )
+        else if (vehicleProvider.hasError)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Icon(Icons.error_outline, color: Colors.grey[400], size: 64),
+                  16.h,
                   Text(
-                    name,
-                    style: AppTextStyles.bodyText1.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    vehicleProvider.errorMessage ?? 'Error loading vehicles',
+                    style: TextStyle(color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
                   ),
-                  Text(
-                    price,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  16.h,
+                  ElevatedButton(
+                    onPressed: () => vehicleProvider.refresh(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                    ),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          )
+        else if (vehicleProvider.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                children: [
+                  Icon(Icons.directions_car, color: Colors.grey[400], size: 64),
+                  16.h,
+                  Text(
+                    'No vehicles found',
+                    style: AppTextStyles.bodyText1.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  8.h,
+                  Text(
+                    'Try adjusting your search or filters',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: vehicleProvider.vehicles.length,
+            itemBuilder: (context, index) {
+              final vehicle = vehicleProvider.vehicles[index];
+              return Consumer<FavouriteProvider>(
+                builder: (context, favouriteProvider, child) {
+                  return CarCard(
+                    vehicle: vehicle,
+                    isFavorite: favouriteProvider.isFavorited(vehicle.id),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => PostDetailScreen(carId: vehicle.id),
+                        ),
+                      );
+                    },
+                    onFavorite: () {
+                      _handleFavorite(vehicle, favouriteProvider);
+                    },
+                  );
+                },
+              );
+            },
+          ),
+      ],
     );
+  }
+
+  void _handleFavorite(vehicle, FavouriteProvider favouriteProvider) {
+    favouriteProvider.toggleFavourite(vehicle.id).then((isNowFavorited) {
+      final message =
+          isNowFavorited
+              ? 'Added ${vehicle.title} to favorites'
+              : 'Removed ${vehicle.title} from favorites';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor:
+              isNowFavorited ? AppColors.primary : Colors.grey[600],
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    });
   }
 
   Widget _buildBottomNavigationBar() {
@@ -427,7 +553,10 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
           onTap: (index) {
-            if (index == 2) {
+            if (index == 1) {
+              // Favorites tab
+              Navigator.pushNamed(context, AppRoutes.favourites);
+            } else if (index == 2) {
               Navigator.pushNamed(context, AppRoutes.createPost);
             } else if (index == 3) {
               // Profile tab
@@ -441,7 +570,39 @@ class _HomeScreenState extends State<HomeScreen> {
           items: [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
             BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border),
+              icon: Consumer<FavouriteProvider>(
+                builder: (context, favouriteProvider, child) {
+                  return Stack(
+                    children: [
+                      Icon(Icons.favorite_border),
+                      if (favouriteProvider.favouritesCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            constraints: BoxConstraints(
+                              minWidth: 12,
+                              minHeight: 12,
+                            ),
+                            child: Text(
+                              '${favouriteProvider.favouritesCount}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
               label: '',
             ),
             BottomNavigationBarItem(

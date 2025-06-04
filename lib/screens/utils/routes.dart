@@ -6,4 +6,5 @@ class AppRoutes {
   static const String forgotPassword = '/forgotPassword';
   static const String createPost = '/createPost';
   static const String editProfile = '/editProfile';
+  static const String favourites = '/favourites';
 }
