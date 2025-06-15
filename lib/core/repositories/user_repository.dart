@@ -1,5 +1,6 @@
 import '../../models/models.dart';
 import 'base_repository.dart';
+import '../../models/user_model.dart';
 
 class UserRepository extends BaseRepository {
   @override
@@ -13,8 +14,9 @@ class UserRepository extends BaseRepository {
 
   // Get user by ID
   Future<UserModel?> getUserById(String id) async {
-    final data = await getById(id);
-    return data != null ? UserModel.fromJson(data) : null;
+    final response = await _client.from('User').select().eq('id', id).maybeSingle();
+    if (response == null) return null;
+    return UserModel.fromJson(response);
   }
 
   // Get user by auth ID

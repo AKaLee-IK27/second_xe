@@ -1,9 +1,14 @@
 import '../../models/models.dart';
 import 'base_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_service.dart';
 
 class VehiclePostRepository extends BaseRepository {
+  final SupabaseClient _client = SupabaseService.client;
+  final String _tableName = 'VehiclePost';
+
   @override
-  String get tableName => 'VehiclePost';
+  String get tableName => _tableName;
 
   // Get all vehicle posts
   Future<List<VehiclePostModel>> getAllPosts() async {
@@ -18,15 +23,46 @@ class VehiclePostRepository extends BaseRepository {
   }
 
   // Create vehicle post
-  Future<VehiclePostModel> createPost(VehiclePostModel post) async {
-    final data = await create(post.toInsertJson());
-    return VehiclePostModel.fromJson(data);
-  }
+  Future<VehiclePostModel> createPost({
+    required String title,
+    required int year,
+    required int mileage,
+    required String brand,
+    required String model,
+    required String location,
+    required double price,
+    required String description,
+    required List<String> imageUrls,
+    required Map<String, bool> features,
+  }) async {
+    try {
+      final user = SupabaseService.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
 
-  // Update vehicle post
-  Future<VehiclePostModel> updatePost(String id, VehiclePostModel post) async {
-    final data = await update(id, post.toUpdateJson());
-    return VehiclePostModel.fromJson(data);
+      // Create the post
+      final response = await _client.from(_tableName).insert({
+        'user_id': user.id,
+        'title': title,
+        'year': year,
+        'mileage': mileage,
+        'brand': brand,
+        'model': model,
+        'location': location,
+        'price': price,
+        'description': description,
+        'image_urls': imageUrls,
+        'features': features,
+        'status': 'available',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }).select().single();
+
+      return VehiclePostModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to create post: $e');
+    }
   }
 
   // Delete vehicle post
@@ -37,8 +73,8 @@ class VehiclePostRepository extends BaseRepository {
   // Get posts by user ID
   Future<List<VehiclePostModel>> getPostsByUserId(String userId) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .eq('user_id', userId)
           .order('created_at', ascending: false);
@@ -54,8 +90,8 @@ class VehiclePostRepository extends BaseRepository {
   // Get posts by status
   Future<List<VehiclePostModel>> getPostsByStatus(VehicleStatus status) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .eq('status', status.value)
           .order('created_at', ascending: false);
@@ -72,8 +108,8 @@ class VehiclePostRepository extends BaseRepository {
   Future<List<VehiclePostModel>> getAvailablePosts() async {
     try {
       final now = DateTime.now().toIso8601String();
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .eq('status', 'available')
           .or('expire_at.is.null,expire_at.gt.$now')
@@ -90,8 +126,8 @@ class VehiclePostRepository extends BaseRepository {
   // Search posts by brand, model, or title
   Future<List<VehiclePostModel>> searchPosts(String query) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .or('title.ilike.%$query%,brand.ilike.%$query%,model.ilike.%$query%')
           .eq('status', 'available')
@@ -111,7 +147,7 @@ class VehiclePostRepository extends BaseRepository {
     double? maxPrice,
   }) async {
     try {
-      var query = client.from(tableName).select().eq('status', 'available');
+      var query = _client.from(_tableName).select().eq('status', 'available');
 
       if (minPrice != null) {
         query = query.gte('price', minPrice);
@@ -136,7 +172,7 @@ class VehiclePostRepository extends BaseRepository {
     int? maxYear,
   }) async {
     try {
-      var query = client.from(tableName).select().eq('status', 'available');
+      var query = _client.from(_tableName).select().eq('status', 'available');
 
       if (minYear != null) {
         query = query.gte('year', minYear);
@@ -158,8 +194,8 @@ class VehiclePostRepository extends BaseRepository {
   // Get posts by brand
   Future<List<VehiclePostModel>> getPostsByBrand(String brand) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .eq('brand', brand)
           .eq('status', 'available')
@@ -176,8 +212,8 @@ class VehiclePostRepository extends BaseRepository {
   // Get posts by location
   Future<List<VehiclePostModel>> getPostsByLocation(String location) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .ilike('location', '%$location%')
           .eq('status', 'available')
@@ -198,8 +234,8 @@ class VehiclePostRepository extends BaseRepository {
   ) async {
     try {
       final response =
-          await client
-              .from(tableName)
+          await _client
+              .from(_tableName)
               .update({
                 'status': status.value,
                 'updated_at': DateTime.now().toIso8601String(),
@@ -218,8 +254,8 @@ class VehiclePostRepository extends BaseRepository {
   Future<List<VehiclePostModel>> getExpiredPosts() async {
     try {
       final now = DateTime.now().toIso8601String();
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .lt('expire_at', now)
           .neq('status', 'expired')
@@ -236,8 +272,8 @@ class VehiclePostRepository extends BaseRepository {
   // Get recent posts
   Future<List<VehiclePostModel>> getRecentPosts({int limit = 10}) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .eq('status', 'available')
           .order('created_at', ascending: false)
@@ -254,11 +290,11 @@ class VehiclePostRepository extends BaseRepository {
   // Get featured posts (posts with images and complete information)
   Future<List<VehiclePostModel>> getFeaturedPosts({int limit = 10}) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select()
           .eq('status', 'available')
-          .not('imageURL', 'is', null)
+          .not('image_urls', 'is', null)
           .not('price', 'is', null)
           .not('year', 'is', null)
           .order('created_at', ascending: false)
@@ -275,7 +311,7 @@ class VehiclePostRepository extends BaseRepository {
   // Get posts count
   Future<int> getPostsCount() async {
     try {
-      final response = await client.from(tableName).select('id');
+      final response = await _client.from(_tableName).select('id');
       return response.length;
     } catch (e) {
       throw Exception('Failed to get posts count: $e');
@@ -285,8 +321,8 @@ class VehiclePostRepository extends BaseRepository {
   // Get posts count by status
   Future<int> getPostsCountByStatus(VehicleStatus status) async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select('id')
           .eq('status', status.value);
       return response.length;
@@ -298,8 +334,8 @@ class VehiclePostRepository extends BaseRepository {
   // Get unique brands
   Future<List<String>> getUniqueBrands() async {
     try {
-      final response = await client
-          .from(tableName)
+      final response = await _client
+          .from(_tableName)
           .select('brand')
           .not('brand', 'is', null);
 
@@ -329,7 +365,7 @@ class VehiclePostRepository extends BaseRepository {
     int limit = 50,
   }) async {
     try {
-      var query = client.from(tableName).select();
+      var query = _client.from(_tableName).select();
 
       if (brand != null) {
         query = query.eq('brand', brand);
@@ -367,6 +403,39 @@ class VehiclePostRepository extends BaseRepository {
           .toList();
     } catch (e) {
       throw Exception('Failed to filter posts: $e');
+    }
+  }
+
+  Future<List<VehiclePostModel>> getUserPosts() async {
+    try {
+      final user = SupabaseService.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await _client
+          .from(_tableName)
+          .select()
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+
+      return response.map((json) => VehiclePostModel.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to get user posts: $e');
+    }
+  }
+
+  Future<void> updatePost(String id, Map<String, dynamic> data) async {
+    try {
+      await _client
+          .from(_tableName)
+          .update({
+            ...data,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', id);
+    } catch (e) {
+      throw Exception('Failed to update post: $e');
     }
   }
 }

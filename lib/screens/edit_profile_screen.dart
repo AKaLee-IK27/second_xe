@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:second_xe/core/styles/text_styles.dart';
 import 'package:second_xe/screens/utils/sizes.dart';
+import 'package:provider/provider.dart';
+import 'package:second_xe/providers/auth_provider.dart';
+import 'package:second_xe/core/services/storage_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -10,18 +15,80 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final TextEditingController _usernameController = TextEditingController(
-    text: "Magdalena Succrose",
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: "magdalena83@mail.com",
-  );
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  String? _avatarUrl;
+  File? _pickedImage;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    _usernameController.text = authProvider.displayName;
+    _emailController.text = authProvider.user?.email ?? '';
+    _avatarUrl = authProvider.avatarUrl ?? '';
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile != null) {
+      setState(() {
+        _pickedImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _handleSaveChanges() async {
+    if (_usernameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all required fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    setState(() { _isLoading = true; });
+    String? avatarUrl = _avatarUrl;
+    try {
+      // Upload avatar if picked
+      if (_pickedImage != null) {
+        avatarUrl = await StorageService.uploadImage(_pickedImage!, 'avatars');
+      }
+      // Update profile in Auth
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.updateProfile(
+        fullName: _usernameController.text.trim(),
+        avatarUrl: avatarUrl,
+      );
+      if (!success) throw Exception(authProvider.errorMessage ?? 'Failed to update profile');
+      setState(() { _avatarUrl = avatarUrl; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update profile: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() { _isLoading = false; });
+    }
   }
 
   @override
@@ -40,136 +107,106 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           style: AppTextStyles.bodyText1.copyWith(fontWeight: FontWeight.w500),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {
-              // Show more options
-            },
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              24.h,
-              // Profile picture
-              Stack(
-                alignment: Alignment.center,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: NetworkImage(
-                      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 1,
-                            blurRadius: 3,
+                  24.h,
+                  // Profile picture
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _pickedImage != null
+                            ? FileImage(_pickedImage!)
+                            : (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                                ? NetworkImage(_avatarUrl!) as ImageProvider
+                                : const AssetImage('assets/images/default_avatar.png'),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                spreadRadius: 1,
+                                blurRadius: 3,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.camera_alt,
-                          color: Colors.grey[600],
-                          size: 20,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.camera_alt,
+                              color: Colors.grey[600],
+                              size: 20,
+                            ),
+                            onPressed: _isLoading ? null : _pickImage,
+                          ),
                         ),
-                        onPressed: () {
-                          // Add image picking functionality
-                        },
                       ),
+                    ],
+                  ),
+                  32.h,
+                  // Username Section
+                  _buildSectionTitle('Username'),
+                  _buildInfoField(
+                    controller: _usernameController,
+                    icon: Icons.person_outline,
+                    enabled: !_isLoading,
+                  ),
+                  24.h,
+                  // Email Section (read-only)
+                  _buildSectionTitle('Email'),
+                  _buildInfoField(
+                    controller: _emailController,
+                    icon: Icons.email_outlined,
+                    enabled: false,
+                  ),
+                  40.h,
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleSaveChanges,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5B5FD2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              'Save Changes',
+                              style: AppTextStyles.bodyText1.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
+                  24.h,
                 ],
               ),
-              32.h,
-
-              // Username Section
-              _buildSectionTitle('Username'),
-              _buildInfoField(
-                controller: _usernameController,
-                icon: Icons.person_outline,
-              ),
-              24.h,
-
-              // Email/Phone Section
-              _buildSectionTitle('Email or Phone Number'),
-              _buildInfoField(
-                controller: _emailController,
-                icon: Icons.email_outlined,
-              ),
-              24.h,
-
-              // Account Liked With
-              _buildSectionTitle('Account Linked With'),
-              _buildAccountLinkItem(
-                icon: Icon(Icons.email, color: Colors.grey[600], size: 24),
-                title: 'Google',
-                isLinked: true,
-                onTap: () {
-                  // Handle Google account linking
-                },
-              ),
-
-              _buildAccountLinkItem(
-                icon: Icon(Icons.facebook, color: Colors.blue, size: 24),
-                title: 'Facebook',
-                isLinked: false,
-                onTap: () {
-                  // Handle Facebook account linking
-                },
-              ),
-
-              _buildAccountLinkItem(
-                icon: Icon(Icons.apple, color: Colors.black, size: 24),
-                title: 'Apple',
-                isLinked: false,
-                onTap: () {
-                  // Handle Apple account linking
-                },
-              ),
-
-              40.h,
-              // Save Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _handleSaveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(
-                      0xFF5B5FD2,
-                    ), // Purple color from the design
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child: Text(
-                    'Save Changes',
-                    style: AppTextStyles.bodyText1.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              24.h,
-            ],
+            ),
           ),
-        ),
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.1),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -190,6 +227,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildInfoField({
     required TextEditingController controller,
     required IconData icon,
+    bool enabled = true,
   }) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
@@ -200,6 +238,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       child: TextField(
         controller: controller,
+        enabled: enabled,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.grey[600]),
           border: InputBorder.none,
@@ -207,58 +246,5 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildAccountLinkItem({
-    required Widget icon,
-    required String title,
-    required bool isLinked,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300, width: 1.0),
-        ),
-      ),
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: icon,
-        title: Text(title, style: AppTextStyles.bodyText1),
-        trailing:
-            isLinked
-                ? null
-                : IconButton(
-                  icon: const Icon(Icons.link, color: Colors.grey),
-                  onPressed: onTap,
-                ),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  void _handleSaveChanges() {
-    // Validate fields
-    if (_usernameController.text.isEmpty || _emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all required fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Save profile changes
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile updated successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
-
-    // Navigate back
-    Navigator.pop(context);
   }
 }

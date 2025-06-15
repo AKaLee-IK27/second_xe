@@ -99,28 +99,29 @@ class FavouriteRepository extends BaseRepository {
         throw Exception('User not authenticated');
       }
 
-      final response = await client
+      // First get the favorite post IDs
+      final favouriteResponse = await client
           .from(tableName)
-          .select('''
-            created_at,
-            ${_postsTableName}!inner (
-              *,
-              User!inner (
-                id,
-                full_name,
-                email
-              )
-            )
-          ''')
+          .select('post_id')
           .eq('user_id', user.id)
           .order('created_at', ascending: false);
 
-      return response
-          .map((item) {
-            final postData = item[_postsTableName] as Map<String, dynamic>;
-            return VehiclePostModel.fromJson(postData);
-          })
-          .where((vehicle) => vehicle.id.isNotEmpty)
+      if (favouriteResponse.isEmpty) {
+        return [];
+      }
+
+      // Extract post IDs
+      final postIds =
+          favouriteResponse.map((item) => item['post_id'] as String).toList();
+
+      // Then get the actual vehicle posts
+      final vehicleResponse = await client
+          .from(_postsTableName)
+          .select('*')
+          .inFilter('id', postIds);
+
+      return vehicleResponse
+          .map((item) => VehiclePostModel.fromJson(item))
           .toList();
     } catch (e) {
       throw Exception('Failed to get user favorites: $e');

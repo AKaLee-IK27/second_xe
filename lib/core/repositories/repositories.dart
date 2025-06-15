@@ -5,3 +5,4 @@ export 'base_repository.dart';
 export 'user_repository.dart';
 export 'vehicle_post_repository.dart';
 export 'favourite_repository.dart';
+export 'chat_repository.dart';

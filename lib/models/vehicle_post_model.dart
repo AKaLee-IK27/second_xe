@@ -1,3 +1,5 @@
+import 'package:second_xe/models/vehicle_type.dart';
+
 enum VehicleStatus {
   available('available'),
   sold('sold'),
@@ -31,6 +33,11 @@ class VehiclePostModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? expireAt;
+  final List<String> features;
+  final String vehicleType;
+  final int? engineCapacity;
+  final String? transmission;
+  final String? fuelType;
 
   VehiclePostModel({
     required this.id,
@@ -48,17 +55,21 @@ class VehiclePostModel {
     required this.createdAt,
     required this.updatedAt,
     this.expireAt,
+    required this.features,
+    required this.vehicleType,
+    this.engineCapacity,
+    this.transmission,
+    this.fuelType,
   });
 
   // Create VehiclePostModel from JSON
   factory VehiclePostModel.fromJson(Map<String, dynamic> json) {
     List<String>? imageUrls;
-    if (json['imageURL'] != null) {
-      if (json['imageURL'] is List) {
-        imageUrls = List<String>.from(json['imageURL']);
-      } else if (json['imageURL'] is String) {
-        // Handle single string case
-        imageUrls = [json['imageURL'] as String];
+    if (json['image_urls'] != null) {
+      if (json['image_urls'] is List) {
+        imageUrls = List<String>.from(json['image_urls']);
+      } else if (json['image_urls'] is String) {
+        imageUrls = [json['image_urls'] as String];
       }
     }
 
@@ -81,6 +92,11 @@ class VehiclePostModel {
           json['expire_at'] != null
               ? DateTime.parse(json['expire_at'] as String)
               : null,
+      features: List<String>.from(json['features'] ?? []),
+      vehicleType: json['vehicle_type'] ?? 'car',
+      engineCapacity: json['engine_capacity'],
+      transmission: json['transmission'],
+      fuelType: json['fuel_type'],
     );
   }
 
@@ -91,7 +107,7 @@ class VehiclePostModel {
       'user_id': userId,
       'title': title,
       'description': description,
-      'imageURL': imageUrls,
+      'image_urls': imageUrls,
       'brand': brand,
       'model': model,
       'year': year,
@@ -102,6 +118,11 @@ class VehiclePostModel {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'expire_at': expireAt?.toIso8601String(),
+      'features': features,
+      'vehicle_type': vehicleType,
+      'engine_capacity': engineCapacity,
+      'transmission': transmission,
+      'fuel_type': fuelType,
     };
   }
 
@@ -111,7 +132,7 @@ class VehiclePostModel {
       'user_id': userId,
       'title': title,
       'description': description,
-      'imageURL': imageUrls,
+      'image_urls': imageUrls,
       'brand': brand,
       'model': model,
       'year': year,
@@ -120,6 +141,11 @@ class VehiclePostModel {
       'mileage': mileage,
       'status': status.value,
       'expire_at': expireAt?.toIso8601String(),
+      'features': features,
+      'vehicle_type': vehicleType,
+      'engine_capacity': engineCapacity,
+      'transmission': transmission,
+      'fuel_type': fuelType,
     };
   }
 
@@ -128,7 +154,7 @@ class VehiclePostModel {
     return {
       'title': title,
       'description': description,
-      'imageURL': imageUrls,
+      'image_urls': imageUrls,
       'brand': brand,
       'model': model,
       'year': year,
@@ -138,6 +164,11 @@ class VehiclePostModel {
       'status': status.value,
       'updated_at': DateTime.now().toIso8601String(),
       'expire_at': expireAt?.toIso8601String(),
+      'features': features,
+      'vehicle_type': vehicleType,
+      'engine_capacity': engineCapacity,
+      'transmission': transmission,
+      'fuel_type': fuelType,
     };
   }
 
@@ -158,6 +189,11 @@ class VehiclePostModel {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? expireAt,
+    List<String>? features,
+    String? vehicleType,
+    int? engineCapacity,
+    String? transmission,
+    String? fuelType,
   }) {
     return VehiclePostModel(
       id: id ?? this.id,
@@ -175,6 +211,11 @@ class VehiclePostModel {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       expireAt: expireAt ?? this.expireAt,
+      features: features ?? this.features,
+      vehicleType: vehicleType ?? this.vehicleType,
+      engineCapacity: engineCapacity ?? this.engineCapacity,
+      transmission: transmission ?? this.transmission,
+      fuelType: fuelType ?? this.fuelType,
     );
   }
 
