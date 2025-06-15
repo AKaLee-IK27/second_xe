@@ -1,6 +1,7 @@
 import '../../models/models.dart';
 import 'base_repository.dart';
 import '../../models/user_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserRepository extends BaseRepository {
   @override
@@ -14,7 +15,7 @@ class UserRepository extends BaseRepository {
 
   // Get user by ID
   Future<UserModel?> getUserById(String id) async {
-    final response = await _client.from('User').select().eq('id', id).maybeSingle();
+    final response = await client.from('User').select().eq('id', id).maybeSingle();
     if (response == null) return null;
     return UserModel.fromJson(response);
   }
@@ -181,5 +182,31 @@ class UserRepository extends BaseRepository {
     } catch (e) {
       throw Exception('Failed to fetch recent users: $e');
     }
+  }
+
+  /// Ensures the current authenticated user exists in the User table.
+  /// If not, creates the user with the same id as in auth.users.
+  Future<UserModel> ensureCurrentUserInUserTable() async {
+    final authUser = Supabase.instance.client.auth.currentUser;
+    if (authUser == null) throw Exception('No authenticated user');
+    final userId = authUser.id;
+    final email = authUser.email;
+    final fullName = authUser.userMetadata?['full_name'] ?? '';
+    // Check if user exists
+    final existing = await getUserById(userId);
+    if (existing != null) return existing;
+    // Insert user
+    final now = DateTime.now();
+    final user = UserModel(
+      id: userId,
+      authId: userId,
+      email: email ?? '',
+      fullName: fullName,
+      createdAt: now,
+      updatedAt: now,
+      isVerified: false,
+      role: UserRole.user,
+    );
+    return await createUser(user);
   }
 }

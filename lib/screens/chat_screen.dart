@@ -48,7 +48,9 @@ class _ChatScreenState extends State<ChatScreen> {
       senderId: widget.currentUserId,
       content: text,
     );
-    // No need to remove from _pendingMessages here; will be handled in StreamBuilder
+    setState(() {
+      _pendingMessages.remove(pending);
+    });
   }
 
   void _scrollToBottom() {
@@ -86,15 +88,13 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, snapshot) {
                 final messages = snapshot.data ?? [];
                 // Remove any pending messages that now exist in the stream
-                final confirmedIds = messages.map((m) => m.id).toSet();
-                _pendingMessages.removeWhere((m) => confirmedIds.contains(m.id) || (
-                  // Remove if same content, sender, and createdAt within 2 seconds
+                _pendingMessages.removeWhere((pending) =>
                   messages.any((msg) =>
-                    msg.content == m.content &&
-                    msg.senderId == m.senderId &&
-                    (msg.createdAt.difference(m.createdAt).inSeconds).abs() < 2
+                    msg.senderId == pending.senderId &&
+                    msg.content == pending.content &&
+                    (msg.createdAt.difference(pending.createdAt).inSeconds).abs() < 5
                   )
-                ));
+                );
                 // Combine messages and pending
                 final allMessages = [...messages, ..._pendingMessages];
                 allMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));

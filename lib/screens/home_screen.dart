@@ -9,6 +9,8 @@ import 'package:second_xe/screens/utils/routes.dart';
 import 'package:second_xe/screens/utils/sizes.dart';
 import 'package:second_xe/widgets/car_card.dart';
 import 'package:second_xe/widgets/filter_dialog.dart';
+import 'package:second_xe/screens/message_list_screen.dart';
+import 'package:second_xe/screens/my_posts_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -43,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: _buildAppBar(),
+      drawer: _buildDrawer(context),
       body: RefreshIndicator(
         onRefresh: () => context.read<VehicleProvider>().refresh(),
         child: _buildBody(),
@@ -51,15 +54,59 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+            ),
+            child: Text(
+              'Menu',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.home),
+            title: Text('Home'),
+            onTap: () {
+              Navigator.pop(context);
+              // Optionally navigate to home
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.library_books), // or Icons.post_add
+            title: Text('My Posts'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyPostsScreen()),
+              );
+            },
+          ),
+          // Add more items as needed
+        ],
+      ),
+    );
+  }
+
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.menu, color: Colors.black),
-        onPressed: () {
-          // Open drawer
-        },
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu, color: Colors.black),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
       ),
       title: Text(
         'XeShop',
@@ -70,31 +117,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       centerTitle: true,
       actions: [
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: Colors.black,
-              ),
-              onPressed: () {
-                // Handle notifications
-              },
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+        IconButton(
+          icon: const Icon(Icons.message, color: Colors.black),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MessageListScreen()),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.library_books, color: Colors.black),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MyPostsScreen()),
+            );
+          },
         ),
       ],
     );
@@ -606,7 +645,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: '',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.compare_arrows),
+              icon: Icon(Icons.add_circle_outline),
               label: '',
             ),
             BottomNavigationBarItem(

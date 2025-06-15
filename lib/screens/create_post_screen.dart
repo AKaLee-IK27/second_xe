@@ -370,11 +370,44 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildSectionTitle('Year'),
-                            _buildTextField(
-                              controller: _yearController,
-                              hintText: 'Enter Year',
-                              keyboardType: TextInputType.number,
-                              validator: _validateYear,
+                            GestureDetector(
+                              onTap: () async {
+                                final currentYear = DateTime.now().year;
+                                final picked = await showDialog<int>(
+                                  context: context,
+                                  builder: (context) {
+                                    int tempYear = int.tryParse(_yearController.text) ?? currentYear;
+                                    return AlertDialog(
+                                      title: Text('Select Year'),
+                                      content: SizedBox(
+                                        width: 300,
+                                        height: 300,
+                                        child: YearPicker(
+                                          firstDate: DateTime(1900),
+                                          lastDate: DateTime(currentYear),
+                                          selectedDate: DateTime(tempYear),
+                                          onChanged: (date) {
+                                            Navigator.of(context).pop(date.year);
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _yearController.text = picked.toString();
+                                  });
+                                }
+                              },
+                              child: AbsorbPointer(
+                                child: _buildTextField(
+                                  controller: _yearController,
+                                  hintText: 'Select Year',
+                                  keyboardType: TextInputType.number,
+                                  validator: _validateYear,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -626,7 +659,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             width: 120,
                             margin: EdgeInsets.only(right: 16),
                             child: ImagePickerWidget(
-                              bucketName: 'vehicle-images',
+                              bucketName: 'uploads',
                               onImageUploaded: _handleImageUploaded,
                               size: 120,
                               isCircular: false,

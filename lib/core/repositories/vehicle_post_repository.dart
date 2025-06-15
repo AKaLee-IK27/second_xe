@@ -438,4 +438,15 @@ class VehiclePostRepository extends BaseRepository {
       throw Exception('Failed to update post: $e');
     }
   }
+
+  Future<List<VehiclePostModel>> getPostsByUserAndStatus(String userId, List<String> statuses) async {
+    final response = await _client
+        .from(_tableName)
+        .select()
+        .eq('user_id', userId)
+        .inFilter('status', statuses);
+    return (response as List)
+        .map((json) => VehiclePostModel.fromJson(json))
+        .toList();
+  }
 }
