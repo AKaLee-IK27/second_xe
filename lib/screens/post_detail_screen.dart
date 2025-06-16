@@ -34,27 +34,43 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _fetchSeller(String userId) async {
-    setState(() { _isSellerLoading = true; });
+    setState(() {
+      _isSellerLoading = true;
+    });
     try {
       final repo = UserRepository();
       final seller = await repo.getUserById(userId);
-      setState(() { _seller = seller; _isSellerLoading = false; });
+      setState(() {
+        _seller = seller;
+        _isSellerLoading = false;
+      });
     } catch (e) {
-      setState(() { _isSellerLoading = false; });
+      setState(() {
+        _isSellerLoading = false;
+      });
     }
   }
 
   Future<void> _fetchPost() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       if (widget.carId == null) throw Exception('No post ID provided');
       final repo = VehiclePostRepository();
       final post = await repo.getPostById(widget.carId!);
       if (post == null) throw Exception('Post not found');
-      setState(() { _post = post; _isLoading = false; });
+      setState(() {
+        _post = post;
+        _isLoading = false;
+      });
       _fetchSeller(post.userId);
     } catch (e) {
-      setState(() { _error = e.toString(); _isLoading = false; });
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
@@ -78,27 +94,30 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: Colors.red)))
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? Center(
+                child: Text(_error!, style: TextStyle(color: Colors.red)),
+              )
               : _post == null
-                  ? const Center(child: Text('Post not found'))
-                  : SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildImageCarousel(),
-                          _buildThumbnails(),
-                          _buildCarInfo(),
-                          _buildSellerInfo(),
-                          _buildCarDescription(),
-                          _buildFeatures(),
-                          _buildContactInfo(),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
+              ? const Center(child: Text('Post not found'))
+              : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildImageCarousel(),
+                    _buildThumbnails(),
+                    _buildCarInfo(),
+                    _buildSellerInfo(),
+                    _buildCarDescription(),
+                    _buildFeatures(),
+                    _buildContactInfo(),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
       bottomNavigationBar: _buildContactButton(),
     );
   }
@@ -111,17 +130,26 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           height: 240,
           width: double.infinity,
           color: Colors.white,
-          child: images.isNotEmpty
-              ? PageView.builder(
-                  itemCount: images.length,
-                  onPageChanged: (index) {
-                    setState(() { _currentImageIndex = index; });
-                  },
-                  itemBuilder: (context, index) {
-                    return Image.network(images[index], fit: BoxFit.cover);
-                  },
-                )
-              : Center(child: Icon(Icons.directions_car, size: 80, color: Colors.grey[300])),
+          child:
+              images.isNotEmpty
+                  ? PageView.builder(
+                    itemCount: images.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentImageIndex = index;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return Image.network(images[index], fit: BoxFit.cover);
+                    },
+                  )
+                  : Center(
+                    child: Icon(
+                      Icons.directions_car,
+                      size: 80,
+                      color: Colors.grey[300],
+                    ),
+                  ),
         ),
         if (images.isNotEmpty)
           Positioned(
@@ -130,14 +158,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(images.length, (index) =>
-                Container(
+              children: List.generate(
+                images.length,
+                (index) => Container(
                   width: 8,
                   height: 8,
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _currentImageIndex == index ? AppColors.primary : Colors.grey[300],
+                    color:
+                        _currentImageIndex == index
+                            ? AppColors.primary
+                            : Colors.grey[300],
                   ),
                 ),
               ),
@@ -158,14 +190,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         children: List.generate(images.length, (index) {
           return GestureDetector(
             onTap: () {
-              setState(() { _currentImageIndex = index; });
+              setState(() {
+                _currentImageIndex = index;
+              });
             },
             child: Container(
               width: 80,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: _currentImageIndex == index ? AppColors.primary : Colors.transparent,
+                  color:
+                      _currentImageIndex == index
+                          ? AppColors.primary
+                          : Colors.transparent,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(4),
@@ -194,31 +231,29 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               Expanded(
                 child: Text(
                   _post!.title,
-                  style: AppTextStyles.headline2.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTextStyles.headline2.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              
             ],
           ),
-              Text(
-                _post!.formattedPrice,
-                style: AppTextStyles.headline2.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+          Text(
+            _post!.formattedPrice,
+            style: AppTextStyles.headline2.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             '${_post!.brand ?? ''} ${_post!.model ?? ''} • ${_post!.year ?? ''}',
             style: AppTextStyles.bodyText1,
           ),
           const SizedBox(height: 4),
-          Text(
-            _post!.location ?? '',
-            style: AppTextStyles.bodyText2,
-          ),
+          Text(_post!.location ?? '', style: AppTextStyles.bodyText2),
         ],
       ),
     );
@@ -247,12 +282,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ChatScreen(
-                chat: chat,
-                currentUserId: currentUserId,
-                sellerName: _seller!.displayName,
-                sellerAvatarUrl: _seller!.avatarUrl,
-              ),
+              builder:
+                  (context) => ChatScreen(
+                    chat: chat,
+                    currentUserId: currentUserId,
+                    sellerName: _seller!.displayName,
+                    sellerAvatarUrl: _seller!.avatarUrl,
+                  ),
             ),
           );
         }
@@ -263,12 +299,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundImage: _seller!.avatarUrl != null && _seller!.avatarUrl!.isNotEmpty
-                  ? NetworkImage(_seller!.avatarUrl!)
-                  : null,
-              child: (_seller!.avatarUrl == null || _seller!.avatarUrl!.isEmpty)
-                  ? Icon(Icons.person, size: 32)
-                  : null,
+              backgroundImage:
+                  _seller!.avatarUrl != null && _seller!.avatarUrl!.isNotEmpty
+                      ? NetworkImage(_seller!.avatarUrl!)
+                      : null,
+              child:
+                  (_seller!.avatarUrl == null || _seller!.avatarUrl!.isEmpty)
+                      ? Icon(Icons.person, size: 32)
+                      : null,
             ),
             const SizedBox(width: 16),
             Column(
@@ -296,7 +334,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         children: [
           Text(
             _post!.description ?? '',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14, height: 1.5),
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -304,13 +346,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildFeatures() {
-    if (_post == null || _post!.features.isEmpty) return const SizedBox.shrink();
+    if (_post == null || _post!.features.isEmpty)
+      return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: _post!.features.map((feature) => _buildFeatureChip(feature)).toList(),
+        children:
+            _post!.features
+                .map((feature) => _buildFeatureChip(feature))
+                .toList(),
       ),
     );
   }
@@ -330,7 +376,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           const SizedBox(width: 4),
           Text(
             feature,
-            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -347,7 +396,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           const SizedBox(height: 16),
           _buildInfoRow(Icons.location_on_outlined, _post!.location ?? ''),
           const SizedBox(height: 16),
-          _buildInfoRow(Icons.info_outline, '${_post!.brand ?? ''} ${_post!.model ?? ''} ${_post!.year ?? ''}'),
+          _buildInfoRow(
+            Icons.info_outline,
+            '${_post!.brand ?? ''} ${_post!.model ?? ''} ${_post!.year ?? ''}',
+          ),
           const SizedBox(height: 16),
           _buildInfoRow(Icons.account_balance_wallet_outlined, 'EMI/Loan'),
         ],
@@ -375,60 +427,63 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       child: SizedBox(
         width: double.infinity,
         height: 50,
-        child: isOwner
-            ? ElevatedButton(
-                onPressed: null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+        child:
+            isOwner
+                ? ElevatedButton(
+                  onPressed: null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-                child: Text(
-                  'This is your post',
-                  style: AppTextStyles.bodyText1.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                  child: Text(
+                    'This is your post',
+                    style: AppTextStyles.bodyText1.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              )
-            : ElevatedButton(
-                onPressed: () async {
-                  if (_post == null || currentUserId == null) return;
-                  final chatRepo = ChatRepository();
-                  final chat = await chatRepo.getOrCreateChat(
-                    postId: _post!.id,
-                    buyerId: currentUserId,
-                    sellerId: _post!.userId,
-                  );
-                  if (chat != null && mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatScreen(
-                          chat: chat,
-                          currentUserId: currentUserId,
-                          sellerName: _post!.brand ?? 'Seller',
-                          sellerAvatarUrl: null, // Optionally fetch seller avatar
-                        ),
-                      ),
+                )
+                : ElevatedButton(
+                  onPressed: () async {
+                    if (_post == null || currentUserId == null) return;
+                    final chatRepo = ChatRepository();
+                    final chat = await chatRepo.getOrCreateChat(
+                      postId: _post!.id,
+                      buyerId: currentUserId,
+                      sellerId: _post!.userId,
                     );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    if (chat != null && mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ChatScreen(
+                                chat: chat,
+                                currentUserId: currentUserId,
+                                sellerName: _post!.brand ?? 'Seller',
+                                sellerAvatarUrl:
+                                    null, // Optionally fetch seller avatar
+                              ),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Chat with Seller',
+                    style: AppTextStyles.bodyText1.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                child: Text(
-                  'Chat with Seller',
-                  style: AppTextStyles.bodyText1.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
       ),
     );
   }

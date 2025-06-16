@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:second_xe/models/vehicle_post_model.dart';
 import 'package:second_xe/core/repositories/vehicle_post_repository.dart';
 import 'package:second_xe/screens/post_detail_screen.dart';
+import 'package:second_xe/screens/payment_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class MyPostsScreen extends StatefulWidget {
   const MyPostsScreen({Key? key}) : super(key: key);
@@ -47,17 +49,33 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
               final post = posts[index];
               return ListTile(
                 leading: (post.imageUrls != null && post.imageUrls!.isNotEmpty)
-                    ? Image.network(post.imageUrls!.first, width: 56, height: 56, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                        imageUrl: post.imageUrls!.first,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 56),
+                      )
                     : const Icon(Icons.directions_car),
                 title: Text(post.title),
                 subtitle: Text(post.status.name),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PostDetailScreen(carId: post.id),
-                    ),
-                  );
+                  if (post.status.name == 'pending') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentScreen(post: post),
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PostDetailScreen(carId: post.id),
+                      ),
+                    );
+                  }
                 },
               );
             },

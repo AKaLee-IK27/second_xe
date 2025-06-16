@@ -74,30 +74,31 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   void _showImageSourceDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Image Source'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Camera'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Image Source'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Camera'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Gallery'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -111,25 +112,25 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
         decoration: BoxDecoration(
           shape: widget.isCircular ? BoxShape.circle : BoxShape.rectangle,
           color: Colors.grey[200],
-          image: _imageUrl != null
-              ? DecorationImage(
-                  image: NetworkImage(_imageUrl!),
-                  fit: BoxFit.cover,
-                )
-              : null,
-        ),
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : _imageUrl == null
-                ? Icon(
-                    Icons.add_a_photo,
-                    size: widget.size * 0.3,
-                    color: Colors.grey[600],
+          image:
+              _imageUrl != null
+                  ? DecorationImage(
+                    image: NetworkImage(_imageUrl!),
+                    fit: BoxFit.cover,
                   )
+                  : null,
+        ),
+        child:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _imageUrl == null
+                ? Icon(
+                  Icons.add_a_photo,
+                  size: widget.size * 0.3,
+                  color: Colors.grey[600],
+                )
                 : null,
       ),
     );
   }
-} 
+}

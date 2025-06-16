@@ -71,11 +71,12 @@ Future<void> main() async {
         'model': 'Model 3',
         'location': 'Ho Chi Minh City',
         'price': 1500000000,
-        'description': 'Immaculate Tesla Model 3 Performance in perfect condition. Full self-driving capability, premium interior, and excellent range. Single owner, no accidents.',
+        'description':
+            'Immaculate Tesla Model 3 Performance in perfect condition. Full self-driving capability, premium interior, and excellent range. Single owner, no accidents.',
         'image_urls': [
           'https://images.unsplash.com/photo-1617788138017-80ad40651399',
           'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8',
-          'https://images.unsplash.com/photo-1617788138017-80ad40651399'
+          'https://images.unsplash.com/photo-1617788138017-80ad40651399',
         ],
         'features': {
           'Alarm': true,
@@ -85,7 +86,7 @@ Future<void> main() async {
           'Rear Parking Sensor': true,
           'Climate Control': true,
           'Navigation System': true,
-          'Leather Seats': true
+          'Leather Seats': true,
         },
         'vehicle_type': 'car',
         'engine_capacity': null,
@@ -103,11 +104,12 @@ Future<void> main() async {
         'model': 'CBR',
         'location': 'Hanoi',
         'price': 850000000,
-        'description': 'Powerful Honda CBR 1000RR-R Fireblade in excellent condition. Full service history, never raced. Includes all original accessories and documentation.',
+        'description':
+            'Powerful Honda CBR 1000RR-R Fireblade in excellent condition. Full service history, never raced. Includes all original accessories and documentation.',
         'image_urls': [
           'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
           'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
-          'https://images.unsplash.com/photo-1558981806-ec527fa84c39'
+          'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
         ],
         'features': {
           'Alarm': true,
@@ -117,7 +119,7 @@ Future<void> main() async {
           'Rear Parking Sensor': false,
           'Climate Control': false,
           'Navigation System': true,
-          'Leather Seats': false
+          'Leather Seats': false,
         },
         'vehicle_type': 'motorbike',
         'engine_capacity': 1000,
@@ -135,11 +137,12 @@ Future<void> main() async {
         'model': 'X5',
         'location': 'Da Nang',
         'price': 3200000000,
-        'description': 'Luxurious BMW X5 xDrive40i with premium package. Panoramic sunroof, premium sound system, and all the latest technology features. Perfect family SUV.',
+        'description':
+            'Luxurious BMW X5 xDrive40i with premium package. Panoramic sunroof, premium sound system, and all the latest technology features. Perfect family SUV.',
         'image_urls': [
           'https://images.unsplash.com/photo-1555215695-3004980ad54e',
           'https://images.unsplash.com/photo-1555215695-3004980ad54e',
-          'https://images.unsplash.com/photo-1555215695-3004980ad54e'
+          'https://images.unsplash.com/photo-1555215695-3004980ad54e',
         ],
         'features': {
           'Alarm': true,
@@ -149,7 +152,7 @@ Future<void> main() async {
           'Rear Parking Sensor': true,
           'Climate Control': true,
           'Navigation System': true,
-          'Leather Seats': true
+          'Leather Seats': true,
         },
         'vehicle_type': 'car',
         'engine_capacity': null,
@@ -167,11 +170,12 @@ Future<void> main() async {
         'model': 'Panigale',
         'location': 'Ho Chi Minh City',
         'price': 1200000000,
-        'description': 'Stunning Ducati Panigale V4 S in red. Track-ready superbike with all the latest electronics and premium components. Includes racing exhaust system.',
+        'description':
+            'Stunning Ducati Panigale V4 S in red. Track-ready superbike with all the latest electronics and premium components. Includes racing exhaust system.',
         'image_urls': [
           'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
           'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
-          'https://images.unsplash.com/photo-1558981806-ec527fa84c39'
+          'https://images.unsplash.com/photo-1558981806-ec527fa84c39',
         ],
         'features': {
           'Alarm': true,
@@ -181,7 +185,7 @@ Future<void> main() async {
           'Rear Parking Sensor': false,
           'Climate Control': false,
           'Navigation System': true,
-          'Leather Seats': false
+          'Leather Seats': false,
         },
         'vehicle_type': 'motorbike',
         'engine_capacity': 1103,
@@ -199,11 +203,12 @@ Future<void> main() async {
         'model': 'C-Class',
         'location': 'Hanoi',
         'price': 2800000000,
-        'description': 'Elegant Mercedes-Benz C-Class AMG with AMG Line package. Premium interior with ambient lighting, advanced driver assistance systems, and powerful engine.',
+        'description':
+            'Elegant Mercedes-Benz C-Class AMG with AMG Line package. Premium interior with ambient lighting, advanced driver assistance systems, and powerful engine.',
         'image_urls': [
           'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8',
           'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8',
-          'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8'
+          'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8',
         ],
         'features': {
           'Alarm': true,
@@ -213,7 +218,7 @@ Future<void> main() async {
           'Rear Parking Sensor': true,
           'Climate Control': true,
           'Navigation System': true,
-          'Leather Seats': true
+          'Leather Seats': true,
         },
         'vehicle_type': 'car',
         'engine_capacity': null,
@@ -231,4 +236,4 @@ Future<void> main() async {
   } catch (e) {
     print('Error seeding database: $e');
   }
-} 
+}

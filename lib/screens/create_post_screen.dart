@@ -6,6 +6,7 @@ import 'package:second_xe/widgets/image_picker_widget.dart';
 import 'package:second_xe/core/repositories/vehicle_post_repository.dart';
 import 'package:second_xe/screens/post_preview_screen.dart';
 import 'package:second_xe/models/vehicle_type.dart';
+import 'package:flutter/services.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -819,6 +820,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         controller: controller,
         keyboardType: keyboardType,
         validator: validator,
+        inputFormatters: keyboardType == TextInputType.number
+            ? [FilteringTextInputFormatter.digitsOnly]
+            : null,
         decoration: InputDecoration(
           hintText: hintText,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey) : null,

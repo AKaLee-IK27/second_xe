@@ -15,7 +15,8 @@ class UserRepository extends BaseRepository {
 
   // Get user by ID
   Future<UserModel?> getUserById(String id) async {
-    final response = await client.from('User').select().eq('id', id).maybeSingle();
+    final response =
+        await client.from('User').select().eq('id', id).maybeSingle();
     if (response == null) return null;
     return UserModel.fromJson(response);
   }

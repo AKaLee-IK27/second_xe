@@ -11,6 +11,7 @@ import 'package:second_xe/widgets/car_card.dart';
 import 'package:second_xe/widgets/filter_dialog.dart';
 import 'package:second_xe/screens/message_list_screen.dart';
 import 'package:second_xe/screens/my_posts_screen.dart';
+import 'package:second_xe/core/services/log_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,10 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load vehicles when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<VehicleProvider>().loadVehicles();
-      // Initialize favorites for quick checking
       context.read<FavouriteProvider>().initializeFavourites();
     });
   }
@@ -60,15 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-            ),
+            decoration: BoxDecoration(color: AppColors.primary),
             child: Text(
               'Menu',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 24),
             ),
           ),
           ListTile(
@@ -76,11 +70,10 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Home'),
             onTap: () {
               Navigator.pop(context);
-              // Optionally navigate to home
             },
           ),
           ListTile(
-            leading: Icon(Icons.library_books), // or Icons.post_add
+            leading: Icon(Icons.library_books),
             title: Text('My Posts'),
             onTap: () {
               Navigator.pop(context);
@@ -88,6 +81,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(builder: (context) => const MyPostsScreen()),
               );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.message),
+            title: Text('Messages'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MessageListScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.upload_file),
+            title: Text('Export & Upload Logs'),
+            onTap: () async {
+              Navigator.pop(context);
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder:
+                    (context) => Center(child: CircularProgressIndicator()),
+              );
+              try {
+                final url = await LogService().exportAndUploadLogFile(
+                  'uploads',
+                );
+                Navigator.pop(context); // Remove loading
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Log uploaded! URL: $url')),
+                );
+              } catch (e) {
+                Navigator.pop(context); // Remove loading
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to upload log: $e')),
+                );
+              }
             },
           ),
           // Add more items as needed
@@ -101,12 +134,13 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: Builder(
-        builder: (context) => IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black),
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        ),
+        builder:
+            (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.black),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            ),
       ),
       title: Text(
         'XeShop',
@@ -116,26 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       centerTitle: true,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.message, color: Colors.black),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MessageListScreen()),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.library_books, color: Colors.black),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MyPostsScreen()),
-            );
-          },
-        ),
-      ],
     );
   }
 

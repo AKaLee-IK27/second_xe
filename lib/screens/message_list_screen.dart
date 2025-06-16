@@ -29,7 +29,9 @@ class _MessageListScreenState extends State<MessageListScreen> {
     if (_currentUserId == null) yield [];
     while (true) {
       yield await _fetchChats();
-      await Future.delayed(const Duration(seconds: 2)); // Poll every 2s for demo
+      await Future.delayed(
+        const Duration(seconds: 2),
+      ); // Poll every 2s for demo
     }
   }
 
@@ -59,11 +61,7 @@ class _MessageListScreenState extends State<MessageListScreen> {
       if (messages.isNotEmpty) {
         lastMessage = MessageModel.fromJson(messages.first);
       }
-      result.add({
-        'chat': chat,
-        'user': user,
-        'lastMessage': lastMessage,
-      });
+      result.add({'chat': chat, 'user': user, 'lastMessage': lastMessage});
     }
     return result;
   }
@@ -76,116 +74,141 @@ class _MessageListScreenState extends State<MessageListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Messages'),
-      ),
-      body: _currentUserId == null
-          ? const Center(child: Text('Not logged in'))
-          : StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _chatsStream(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final chats = snapshot.data!;
-                if (chats.isEmpty) {
-                  return const Center(child: Text('No messages yet.'));
-                }
-                return ListView.builder(
-                  itemCount: chats.length,
-                  itemBuilder: (context, index) {
-                    final chat = chats[index]['chat'] as ChatModel;
-                    final user = chats[index]['user'] as UserModel?;
-                    final lastMessage = chats[index]['lastMessage'] as MessageModel?;
-                    final isUnread = lastMessage != null &&
-                      lastMessage.senderId != _currentUserId;
-                    return Dismissible(
-                      key: ValueKey(chat.id),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      confirmDismiss: (_) async {
-                        return await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete Chat'),
-                            content: const Text('Are you sure you want to delete this chat?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      onDismissed: (_) => _deleteChat(chat),
-                      child: ListTile(
-                        leading: user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty
-                            ? CircleAvatar(backgroundImage: NetworkImage(user.avatarUrl!))
-                            : const CircleAvatar(child: Icon(Icons.person)),
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                user?.displayName ?? 'Unknown',
-                                style: isUnread
-                                    ? const TextStyle(fontWeight: FontWeight.bold)
-                                    : null,
-                              ),
-                            ),
-                            if (isUnread)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                margin: const EdgeInsets.only(left: 6),
-                                decoration: const BoxDecoration(
-                                  color: Colors.blue,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
+      appBar: AppBar(title: const Text('Messages')),
+      body:
+          _currentUserId == null
+              ? const Center(child: Text('Not logged in'))
+              : StreamBuilder<List<Map<String, dynamic>>>(
+                stream: _chatsStream(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final chats = snapshot.data!;
+                  if (chats.isEmpty) {
+                    return const Center(child: Text('No messages yet.'));
+                  }
+                  return ListView.builder(
+                    itemCount: chats.length,
+                    itemBuilder: (context, index) {
+                      final chat = chats[index]['chat'] as ChatModel;
+                      final user = chats[index]['user'] as UserModel?;
+                      final lastMessage =
+                          chats[index]['lastMessage'] as MessageModel?;
+                      final isUnread =
+                          lastMessage != null &&
+                          lastMessage.senderId != _currentUserId;
+                      return Dismissible(
+                        key: ValueKey(chat.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          color: Colors.red,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: const Icon(Icons.delete, color: Colors.white),
                         ),
-                        subtitle: lastMessage != null
-                            ? Text(
-                                lastMessage.content,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: isUnread
-                                    ? const TextStyle(fontWeight: FontWeight.bold)
-                                    : null,
-                              )
-                            : const Text('No messages yet.'),
-                        trailing: lastMessage != null
-                            ? Text(_formatTime(lastMessage.createdAt))
-                            : null,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatScreen(
-                                chat: chat,
-                                currentUserId: _currentUserId!,
-                                sellerName: user?.displayName ?? 'Unknown',
-                                sellerAvatarUrl: user?.avatarUrl,
-                              ),
-                            ),
+                        confirmDismiss: (_) async {
+                          return await showDialog(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  title: const Text('Delete Chat'),
+                                  content: const Text(
+                                    'Are you sure you want to delete this chat?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () =>
+                                              Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(context).pop(true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
                           );
                         },
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                        onDismissed: (_) => _deleteChat(chat),
+                        child: ListTile(
+                          leading:
+                              user?.avatarUrl != null &&
+                                      user!.avatarUrl!.isNotEmpty
+                                  ? CircleAvatar(
+                                    backgroundImage: NetworkImage(
+                                      user.avatarUrl!,
+                                    ),
+                                  )
+                                  : const CircleAvatar(
+                                    child: Icon(Icons.person),
+                                  ),
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  user?.displayName ?? 'Unknown',
+                                  style:
+                                      isUnread
+                                          ? const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          )
+                                          : null,
+                                ),
+                              ),
+                              if (isUnread)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  margin: const EdgeInsets.only(left: 6),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          subtitle:
+                              lastMessage != null
+                                  ? Text(
+                                    lastMessage.content,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        isUnread
+                                            ? const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            )
+                                            : null,
+                                  )
+                                  : const Text('No messages yet.'),
+                          trailing:
+                              lastMessage != null
+                                  ? Text(_formatTime(lastMessage.createdAt))
+                                  : null,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ChatScreen(
+                                      chat: chat,
+                                      currentUserId: _currentUserId!,
+                                      sellerName:
+                                          user?.displayName ?? 'Unknown',
+                                      sellerAvatarUrl: user?.avatarUrl,
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
     );
   }
 
@@ -198,4 +221,4 @@ class _MessageListScreenState extends State<MessageListScreen> {
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return '${time.day}/${time.month}/${time.year}';
   }
-} 
+}

@@ -41,6 +41,10 @@ class VehiclePostRepository extends BaseRepository {
         throw Exception('User not authenticated');
       }
 
+      final selectedFeatures = features.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList();
       // Create the post
       final response = await _client.from(_tableName).insert({
         'user_id': user.id,
@@ -53,8 +57,8 @@ class VehiclePostRepository extends BaseRepository {
         'price': price,
         'description': description,
         'image_urls': imageUrls,
-        'features': features,
-        'status': 'available',
+        'features': selectedFeatures,
+        'status': 'pending',
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       }).select().single();

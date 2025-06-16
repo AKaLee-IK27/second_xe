@@ -93,10 +93,7 @@ class PostPreviewScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(
-                          title,
-                          style: AppTextStyles.headline2,
-                        ),
+                        child: Text(title, style: AppTextStyles.headline2),
                       ),
                       Text(
                         '\$${price.toStringAsFixed(2)}',
@@ -118,20 +115,11 @@ class PostPreviewScreen extends StatelessWidget {
                         ),
                       ),
                       8.w,
-                      Text(
-                        '•',
-                        style: AppTextStyles.bodyText1,
-                      ),
+                      Text('•', style: AppTextStyles.bodyText1),
                       8.w,
-                      Text(
-                        year.toString(),
-                        style: AppTextStyles.bodyText1,
-                      ),
+                      Text(year.toString(), style: AppTextStyles.bodyText1),
                       8.w,
-                      Text(
-                        '•',
-                        style: AppTextStyles.bodyText1,
-                      ),
+                      Text('•', style: AppTextStyles.bodyText1),
                       8.w,
                       Text(
                         vehicleType == VehicleType.car ? 'Car' : 'Motorbike',
@@ -149,18 +137,13 @@ class PostPreviewScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.settings, size: 16),
                       4.w,
-                      Text(
-                        transmission,
-                        style: AppTextStyles.bodyText2,
-                      ),
+                      Text(transmission, style: AppTextStyles.bodyText2),
                       16.w,
                       Icon(Icons.local_gas_station, size: 16),
                       4.w,
-                      Text(
-                        fuelType,
-                        style: AppTextStyles.bodyText2,
-                      ),
-                      if (vehicleType == VehicleType.motorbike && engineCapacity != null) ...[
+                      Text(fuelType, style: AppTextStyles.bodyText2),
+                      if (vehicleType == VehicleType.motorbike &&
+                          engineCapacity != null) ...[
                         16.w,
                         Icon(Icons.speed, size: 16),
                         4.w,
@@ -178,17 +161,11 @@ class PostPreviewScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.location_on_outlined, size: 16),
                       4.w,
-                      Text(
-                        location,
-                        style: AppTextStyles.bodyText2,
-                      ),
+                      Text(location, style: AppTextStyles.bodyText2),
                       16.w,
                       Icon(Icons.speed, size: 16),
                       4.w,
-                      Text(
-                        '$mileage km',
-                        style: AppTextStyles.bodyText2,
-                      ),
+                      Text('$mileage km', style: AppTextStyles.bodyText2),
                     ],
                   ),
                   24.h,
@@ -204,26 +181,27 @@ class PostPreviewScreen extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: features.entries
-                        .where((entry) => entry.value)
-                        .map((entry) {
-                      return Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          entry.key,
-                          style: AppTextStyles.bodyText2.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                    children:
+                        features.entries.where((entry) => entry.value).map((
+                          entry,
+                        ) {
+                          return Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              entry.key,
+                              style: AppTextStyles.bodyText2.copyWith(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                   ),
                   24.h,
 
@@ -235,10 +213,7 @@ class PostPreviewScreen extends StatelessWidget {
                     ),
                   ),
                   8.h,
-                  Text(
-                    description,
-                    style: AppTextStyles.bodyText2,
-                  ),
+                  Text(description, style: AppTextStyles.bodyText2),
                   32.h,
 
                   // Confirm button
@@ -271,4 +246,4 @@ class PostPreviewScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}
